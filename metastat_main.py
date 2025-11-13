@@ -121,10 +121,9 @@ def main():
     # elif torch.backends.mps.is_available():
     #     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
     #     device = "mps"
-    #     print("⚠️  Using MPS with CPU fallback for unsupported operations.")
+    #     print("Using MPS with CPU fallback for unsupported operations.")
     # else:
-    #     device = "cpu"
-    device = "cpu"
+    device = cfg["device"]
 
     print(f"Using device: {device}")
 
@@ -159,6 +158,8 @@ def main():
     for epoch in range(epochs):
         model.train()
         total_loss = 0
+        batch_count = 0
+
         for x, lengths, y in train_loader:
             x, lengths, y = x.to(device), lengths.to(device), y.to(device)
             pred = model(x, lengths)
@@ -167,15 +168,17 @@ def main():
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
+            batch_count += 1
 
+        avg_train_loss = total_loss / batch_count
         val_mse = evaluate_mse(model, val_loader, device)
-        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {total_loss/len(train_loader):.4f} | Val MSE: {val_mse:.4f}")
+        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f} | Val MSE: {val_mse:.4f}")
 
     # ---- Save model ----
     if save_model:
         os.makedirs(os.path.dirname(save_model), exist_ok=True)
         torch.save(model.state_dict(), save_model)
-        print(f"💾 Model weights saved to: {save_model}")
+        print(f"Model weights saved to: {save_model}")
 
     # ---- Evaluate ----
     results = {"epochs": epochs, "val_mse": evaluate_mse(model, val_loader, device)}
@@ -189,13 +192,13 @@ def main():
         os.makedirs(os.path.dirname(save_results), exist_ok=True)
         with open(save_results, "w") as f:
             json.dump(results, f, indent=2)
-        print(f"📊 Results saved to: {save_results}")
+        print(f"Results saved to: {save_results}")
 
     # ---- Save used configuration ----
     config_copy = os.path.join(os.path.dirname(save_results or save_model or "."), "used_train_config.json")
     with open(config_copy, "w") as f:
         json.dump(cfg, f, indent=4)
-    print(f"📝 Saved configuration copy to: {config_copy}")
+    print(f"Saved configuration copy to: {config_copy}")
 
 
 if __name__ == "__main__":

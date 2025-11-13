@@ -120,6 +120,8 @@ def main():
 
     # --- Extract parameters ---
     train_size = cfg.get("train_size")
+    test_size = cfg.get("test_size")
+    test_name = cfg.get("test_name", "test_meta.npz")
     val_size = cfg.get("val_size")
     outdir = cfg.get("outdir", "data")
     train_name = cfg.get("train_name", "train_meta.npz")
@@ -153,6 +155,13 @@ def main():
         val_path = os.path.join(outdir, val_name)
         save_meta_dataset(val_datasets, val_targets, val_dists, val_path)
         summarize_dataset(val_targets, val_dists)
+        
+    if test_size:
+        print(f"Generating test data ({test_size} samples) using distributions: {distribution}")
+        test_datasets, test_targets, test_dists = generate_meta_dataset(test_size, distribution, n=n_value)
+        test_path = os.path.join(outdir, test_name)
+        save_meta_dataset(test_datasets, test_targets, test_dists, test_path)
+        summarize_dataset(test_targets, test_dists)
 
     # Save the used configuration
     used_cfg_path = os.path.join(outdir, "used_config.json")

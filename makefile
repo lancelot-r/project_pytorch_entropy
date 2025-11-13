@@ -5,14 +5,15 @@ DATA_LOAD = metastat_dataloader.py
 MAIN = metastat_main.py
 MODEL = metastat_model.py
 MODEL_CONFIG = model_params.json
-train_data:
+MODEL_TEST = test_script.py
+data:
 	$(PYTHON) $(DATA_GENERATION) --config $(CONFIG)
-
-load_data:
-	$(PYTHON) $(DATA_LOAD)
 
 model:
 	$(PYTHON) $(MODEL)
 
-train_model:
+train:
 	$(PYTHON) $(MAIN) --config $(MODEL_CONFIG)
+
+test:
+	$(PYTHON) $(MODEL_TEST)
