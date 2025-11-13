@@ -1,0 +1,10 @@
+{
+  "train_size": 1000,
+  "val_size": 200,
+  "outdir": "data",
+  "train_name": "train_meta.npz",
+  "val_name": "val_meta.npz",
+  "distribution": ["normal", "uniform", "exponential"],
+  "n": [50, 200],
+  "seed": 42
+}

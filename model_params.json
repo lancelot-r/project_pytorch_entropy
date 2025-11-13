@@ -1,0 +1,14 @@
+{
+  "data": "data/train_meta.npz",
+  "val_data": "data/val_meta.npz",
+  "epochs": 2,
+  "batch_size": 32,
+  "hidden": 128,
+  "heads": 8,
+  "layers": 3,
+  "lr": 0.0005,
+  "weight_decay": 0.0001,
+  "eval": true,
+  "save_model": "models/metastat_transformer.pt",
+  "save_results": "results/training_results.json"
+}
