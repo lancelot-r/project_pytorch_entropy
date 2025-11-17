@@ -1,12 +1,12 @@
 {
-  "train_size": 1000,
-  "test_size": 200,
-  "val_size": 2000,
+  "train_size": 20000,
+  "test_size": 5000,
+  "val_size": 3000,
   "outdir": "data",
   "train_name": "train_meta.npz",
   "val_name": "val_meta.npz",
   "test_name":"test_meta.npz",
-  "distribution": ["normal", "uniform", "exponential"],
+  "distribution": ["normal", "uniform", "exponential", "gamma", "lognormal", "laplace", "logistic", "beta", "chi_square", "cauchy", "rayleigh", "weibull", "pareto", "inverse_gamma", "student_t"],
   "n": [50, 200],
   "seed": 42
 }

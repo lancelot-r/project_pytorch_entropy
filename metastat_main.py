@@ -8,7 +8,7 @@ from metastat_model import MyTransformerEstimator
 import numpy as np
 import os
 import json
-
+from tqdm import tqdm
 
 def train_epoch(model, loader, optimizer, loss_fn, device):
     model.train()
@@ -134,7 +134,7 @@ def main():
         total_loss = 0
         batch_count = 0
 
-        for x, lengths, y in train_loader:
+        for x, lengths, y in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False): # tqdm for the progress bar
             x, lengths, y = x.to(device), lengths.to(device), y.to(device)
             pred = model(x, lengths)
             loss = loss_fn(pred, y)
