@@ -6,7 +6,9 @@ MAIN = metastat_main.py
 MODEL = metastat_model.py
 MODEL_CONFIG = model_params.json
 MODEL_TEST = test_script.py
-data:
+.PHONY: clean
+
+data_generation:
 	$(PYTHON) $(DATA_GENERATION) --config $(CONFIG)
 
 model:
@@ -17,3 +19,11 @@ train:
 
 test:
 	$(PYTHON) $(MODEL_TEST)
+
+
+
+clean_folders:
+	@echo "Cleaning data, models, and results folders..."
+	@mkdir -p data models results
+	@rm -rf data/* models/* results/*
+	@echo "Done."

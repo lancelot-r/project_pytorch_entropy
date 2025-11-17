@@ -1,18 +1,3 @@
-# export PYTORCH_ENABLE_MPS_FALLBACK=1
-
-#  python main.py \
-#     --data data/train_meta.npz \
-#     --val-data data/test_meta.npz \
-#     --epochs 100 \
-#     --batch-size 8 \
-#     --hidden 128 \
-#     --layers 4 \
-#     --lr 1e-3 \
-#     --weight-decay 1e-5 \
-#     --eval
-
-
-
 import argparse
 import torch
 from torch.utils.data import DataLoader
@@ -21,10 +6,8 @@ import torch.optim as optim
 from metastat_dataloader import MetaStatDataset, collate_fn, load_data
 from metastat_model import MyTransformerEstimator
 import numpy as np
-
 import os
 import json
-
 
 
 def train_epoch(model, loader, optimizer, loss_fn, device):
@@ -114,17 +97,8 @@ def main():
     save_model = cfg.get("save_model")
     save_results = cfg.get("save_results")
 
-    # Select device
-    # ---- Device selection (with MPS fallback fix) ----
-    # if torch.cuda.is_available():
-    #     device = "cuda"
-    # elif torch.backends.mps.is_available():
-    #     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-    #     device = "mps"
-    #     print("Using MPS with CPU fallback for unsupported operations.")
-    # else:
+    # device selection for training (cpu/gpu)
     device = cfg["device"]
-
     print(f"Using device: {device}")
 
 
@@ -177,22 +151,22 @@ def main():
     # ---- Save model ----
     if save_model:
         os.makedirs(os.path.dirname(save_model), exist_ok=True)
-        torch.save(model.state_dict(), save_model)
-        print(f"Model weights saved to: {save_model}")
+        torch.save(model, save_model)
+        print(f"Model saved to: {save_model}")
 
-    # ---- Evaluate ----
-    results = {"epochs": epochs, "val_mse": evaluate_mse(model, val_loader, device)}
-    if eval_mode:
-        bias2, var = evaluate_bias_variance(model, val_loader, device)
-        results.update({"bias2": bias2, "variance": var})
-        print(f"\nBias²: {bias2:.6f} | Variance: {var:.6f}")
+    # # ---- Evaluate ----
+    # results = {"epochs": epochs, "val_mse": evaluate_mse(model, val_loader, device)}
+    # if eval_mode:
+    #     bias2, var = evaluate_bias_variance(model, val_loader, device)
+    #     results.update({"bias2": bias2, "variance": var})
+    #     print(f"\nBias²: {bias2:.6f} | Variance: {var:.6f}")
 
-    # ---- Save results ----
-    if save_results:
-        os.makedirs(os.path.dirname(save_results), exist_ok=True)
-        with open(save_results, "w") as f:
-            json.dump(results, f, indent=2)
-        print(f"Results saved to: {save_results}")
+    # # ---- Save results ----
+    # if save_results:
+    #     os.makedirs(os.path.dirname(save_results), exist_ok=True)
+    #     with open(save_results, "w") as f:
+    #         json.dump(results, f, indent=2)
+    #     print(f"Results saved to: {save_results}")
 
     # ---- Save used configuration ----
     config_copy = os.path.join(os.path.dirname(save_results or save_model or "."), "used_train_config.json")

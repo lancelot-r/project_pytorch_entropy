@@ -1,49 +1,67 @@
-import numpy as np
+import argparse
 import torch
-import csv
-from scipy.stats import entropy
-from scipy.stats import gaussian_kde
+from torch.utils.data import DataLoader
+import numpy as np
+import pandas as pd
+from scipy.stats import differential_entropy
+from metastat_dataloader import MetaStatDataset, collate_fn, load_data
+from metastat_model import MyTransformerEstimator
+import torch.nn as nn
+import os
 
-def estimate_entropy_scipy(x):
-    kde = gaussian_kde(x)
-    grid = np.linspace(np.min(x), np.max(x), 512)
-    pdf = kde(grid)
-    pdf = pdf / np.trapz(pdf, grid)
-    return -np.trapz(pdf * np.log(pdf + 1e-12), grid)
+@torch.inference_mode()
+def predict(model, loader, device):
+    model.eval()
+    preds = []
+    for x, lengths, _ in loader:
+        x, lengths = x.to(device), lengths.to(device)
+        y_hat = model(x, lengths)
+        preds.extend(y_hat.cpu().numpy().tolist())
+    return np.array(preds)
 
-class EntropyModel(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.net = torch.load("models/metastat_transformer.pt")
-    def forward(self, x):
-        return self.net(x)
-
-def load_test_data(path):
-    data = np.load(path, allow_pickle=True)
-    return data["datasets"], data["targets"], data["dists"]
-
-def prepare_input(x):
-    x = torch.tensor(x, dtype=torch.float32)
-    x = x.unsqueeze(0)
-    return x
+def compute_scipy_entropy(sequences):
+    return np.array([differential_entropy(seq) for seq in sequences])
 
 def main():
-    test_datasets, true_entropy, dists = load_test_data("data/test_meta.npz")
-    model = EntropyModel()
-    model.eval()
+    parser = argparse.ArgumentParser(description="Meta-Statistical Entropy Estimator Testing")
+    parser.add_argument("--test_data", type=str, default="data/test_meta.npz")
+    parser.add_argument("--model_file", type=str, default="models/metastat_transformer.pt")
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--output_csv", type=str, default="results/test_predictions.csv")
+    args = parser.parse_args()
+    
+    npz = np.load(args.test_data, allow_pickle=True)
+    dists = npz["dists"]
 
-    rows = []
-    for i, x in enumerate(test_datasets):
-        x_input = prepare_input(x)
-        with torch.no_grad():
-            pred = model(x_input).item()
-        ref = estimate_entropy_scipy(x)
-        rows.append([i, pred, ref, true_entropy[i], dists[i]])
+    test_data, test_targets = load_data(args.test_data)
+    test_loader = DataLoader(
+        MetaStatDataset(test_data, test_targets),
+        batch_size=args.batch_size,
+        collate_fn=collate_fn
+    )
 
-    with open("test_results.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["index", "model_entropy", "scipy_entropy", "true_entropy", "distribution"])
-        writer.writerows(rows)
+    model = torch.load(args.model_file, map_location=args.device, weights_only = False)
+    model.to(args.device)
+
+    model_preds = predict(model, test_loader, args.device)
+
+    sequences = test_data
+    lengths = [len(seq) for seq in test_data]
+    scipy_est = compute_scipy_entropy(sequences)
+
+    df = pd.DataFrame({
+    "dataset_id": np.arange(len(model_preds)),
+    "n": lengths,
+    "distribution": dists,
+    "model_entropy": model_preds.flatten(),
+    "scipy_entropy": scipy_est
+    })
+    
+    os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
+    df.to_csv(args.output_csv, index=False)
+    print(f"Saved predictions to {args.output_csv}")
+
 
 if __name__ == "__main__":
     main()
