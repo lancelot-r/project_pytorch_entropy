@@ -45,17 +45,22 @@ def main():
     model.to(args.device)
 
     model_preds = predict(model, test_loader, args.device)
+    model_bias = model_preds - test_targets
 
     sequences = test_data
     lengths = [len(seq) for seq in test_data]
+
     scipy_est = compute_scipy_entropy(sequences)
+    scipy_bias = scipy_est - test_targets
 
     df = pd.DataFrame({
     "dataset_id": np.arange(len(model_preds)),
     "n": lengths,
     "distribution": dists,
     "model_entropy": model_preds.flatten(),
-    "scipy_entropy": scipy_est
+    "scipy_entropy": scipy_est,
+    "model_bias": model_bias,
+    "scipy_bias": scipy_bias
     })
     
     os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
