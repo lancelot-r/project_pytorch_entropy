@@ -130,7 +130,7 @@ plt.close()
  
 # 6. Boxplot SUPERPOSÉ modèle vs baseline par distribution
 # On compare visuellement les deux 
- 
+
 # On calcule les erreurs absolues par distribution
 dist_order = (
     df.groupby("distribution")["abs_error"]
@@ -146,35 +146,49 @@ plt.figure(figsize=(12, 6))
 ax = plt.gca()
 
 indices = np.arange(len(dist_order))
+offset = 0.15    # Séparation latérale
 
-# Décalage horizontal pour séparer les deux boxplots
-offset = 0.15
-
+# BOX MODEL (ROUGE) 
 bp1 = ax.boxplot(
     model_data,
     positions=indices - offset,
     widths=0.25,
-    showfliers=False
+    showfliers=False,
+    patch_artist=True,                                   # autorise la couleur
+    boxprops=dict(facecolor="red", alpha=0.6),            #  Modèle
+    medianprops=dict(color="black")
 )
+
+#  BOX SCIPY (NOIR)
 bp2 = ax.boxplot(
     scipy_data,
     positions=indices + offset,
     widths=0.25,
-    showfliers=False
+    showfliers=False,
+    patch_artist=True,
+    boxprops=dict(facecolor="black", alpha=0.6),          # Baseline Scipy
+    medianprops=dict(color="white")
 )
 
+# ---- AXES & TITRES ----
 ax.set_xticks(indices)
 ax.set_xticklabels(dist_order, rotation=45, ha="right")
 
 plt.ylabel("Absolute Error", fontsize=12)
-plt.title("Erreur absolue par distribution : modèle vs baseline scipy", fontsize=14)
+plt.title("Erreur absolue par distribution : Modèle (rouge) vs Scipy (noir)", fontsize=14)
 plt.grid(True, axis="y", alpha=0.3)
-plt.legend([bp1["boxes"][0], bp2["boxes"][0]],
-           ["Modèle", "Baseline (scipy)"],
-           loc="upper right")
+
+# Légende 
+plt.legend(
+    [bp1["boxes"][0], bp2["boxes"][0]],
+    ["Transformer Model", "Scipy Baseline"],
+    loc="upper right"
+)
+
 plt.tight_layout()
-plt.savefig(os.path.join(output_dir, "04_boxplot_abs_error_model_vs_scipy.png"), dpi=300)
+plt.savefig(os.path.join(output_dir, "04_boxplot_abs_error_model_vs_scipy_colored.png"), dpi=300)
 plt.close()
+
 
 
  
