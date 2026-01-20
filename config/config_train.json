@@ -1,0 +1,13 @@
+{
+  "name": "exp1",
+  "data": "exp1_train",
+  "val_data": "exp1_val",
+  "epochs": 10,
+  "batch_size": 8,
+  "hidden": 64,
+  "heads": 4,
+  "layers": 2,
+  "lr": 1e-3,
+  "weight_decay": 0,
+  "device": "mps"
+}

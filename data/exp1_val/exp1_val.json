@@ -1,0 +1,13 @@
+{
+    "size": 20000,
+    "name": "exp1_val",
+    "distribution": [
+        "normal",
+        "exponential"
+    ],
+    "n": [
+        30,
+        300
+    ],
+    "seed": 2
+}

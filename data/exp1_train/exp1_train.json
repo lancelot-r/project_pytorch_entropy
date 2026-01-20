@@ -1,0 +1,13 @@
+{
+    "size": 80000,
+    "name": "exp1_train",
+    "distribution": [
+        "normal",
+        "exponential"
+    ],
+    "n": [
+        30,
+        300
+    ],
+    "seed": 1
+}
