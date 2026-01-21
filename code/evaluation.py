@@ -21,6 +21,8 @@ import torch.nn as nn
 import os
 import json
 
+
+
 @torch.inference_mode()
 def predict(model, loader, device):
     model.eval()
@@ -35,85 +37,9 @@ def predict(model, loader, device):
         ys.extend(y.cpu().numpy().tolist())
     return np.array(preds), np.array(lengths), np.array(ys)
 
+
 def compute_scipy_entropy(sequences):
     return np.array([differential_entropy(seq, method="auto") for seq in sequences])    # other methods?
-
-
-# @torch.inference_mode()
-# def predict_bootstrap(model, loader, device, k=30):
-#     model.eval()
-
-#     model_bias2 = []
-#     model_var = []
-#     scipy_bias2 = []
-#     scipy_var = []
-
-#     lengths = []
-#     true_entropy = []
-
-#     for x, length, y in loader:
-#         x = x.to(device)
-#         length = length.to(device)
-
-#         x_np = x.cpu().numpy()
-#         length_np = length.cpu().numpy()
-
-#         true_entropy.extend(y.cpu().numpy().tolist())
-#         lengths.extend(length_np.tolist())
-
-#         for xi, li, yi in zip(x_np, length_np, y.cpu().numpy()):
-#             seq = xi[:li]
-#             y_true = yi
-
-#             if li < 2:
-#                 model_bias2.append(np.nan)
-#                 model_var.append(np.nan)
-#                 scipy_bias2.append(np.nan)
-#                 scipy_var.append(np.nan)
-#                 continue
-
-#             idx = np.random.randint(0, li, size=(k, li))
-
-#             model_preds = []
-#             scipy_preds = []
-
-#             for b_idx in idx:
-#                 boot = seq[b_idx]
-
-#                 # Model prediction
-#                 xb = torch.tensor(boot, dtype=torch.float32, device=device).unsqueeze(0)
-#                 lb = torch.tensor([len(boot)], device=device)
-#                 model_preds.append(model(xb, lb).item())
-
-#                 # SciPy prediction
-#                 scipy_preds.append(
-#                     differential_entropy(boot, method="auto")
-#                 )
-
-#             model_preds = np.array(model_preds)
-#             scipy_preds = np.array(scipy_preds)
-
-#             # ---- Bias² and Variance ----
-#             model_mean = model_preds.mean()
-#             scipy_mean = scipy_preds.mean()
-
-#             model_bias2.append((model_mean - y_true) ** 2)
-#             scipy_bias2.append((scipy_mean - y_true) ** 2)
-
-#             model_var.append(np.mean((model_preds - model_mean) ** 2))
-#             scipy_var.append(np.mean((scipy_preds - scipy_mean) ** 2))
-
-#     return (
-#         model_preds,
-#         scipy_preds,
-#         np.array(model_bias2),
-#         np.array(scipy_bias2),
-#         np.array(model_var),
-#         np.array(scipy_var),
-#         np.array(lengths),
-#         np.array(true_entropy),
-#     )
-
 
 
 def bootstrap_indices(n, k):
@@ -249,7 +175,7 @@ def main():
     data_name = cfg["data"]
     data_path = os.path.join("data", data_name, f"{data_name}.npz")
     model_name = cfg["model"]
-    model_path = os.path.join("experiments", model_name, f"{model_name}_model.pt")
+    model_path = os.path.join("training", model_name, f"{model_name}_model.pt")
     batch_size = cfg["batch_size"]
     device = torch.device(cfg["device"])
     bootstrap_K = cfg.get("bootstrap", None)
@@ -267,7 +193,7 @@ def main():
     )
 
 
-    model_config = os.path.join("experiments", model_name, f"{model_name}_config.json")
+    model_config = os.path.join("training", model_name, f"{model_name}_config.json")
     with open(model_config, "r") as f:
         model_cfg = json.load(f)
     model = MyTransformerEstimator(
@@ -297,8 +223,6 @@ def main():
         scipy_preds = compute_scipy_entropy(test_data)
 
 
-
-
     df = pd.DataFrame({
         "dataset_id": np.arange(len(model_preds)),
         "n": np.asarray(lengths).ravel(),
@@ -317,12 +241,10 @@ def main():
         df["scipy_var"] = np.asarray(scipy_var).ravel()
 
 
-
     # guarantee that dists aligns with samples
     assert len(dists) == len(model_preds)
     if bootstrap_K is not None:
         assert len(model_mean) == len(model_preds)
-
 
 
     base_dir = os.path.join("evaluation", name)
@@ -335,6 +257,8 @@ def main():
         json.dump(cfg, f, indent=4, default=str)
 
     print(f"Files saved in: {base_dir}")
+
+
 
 
 if __name__ == "__main__":

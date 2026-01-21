@@ -61,7 +61,7 @@ def eval_epoch(model, loader, loss_fn, device):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Meta-Statistical Entropy Estimator Training (JSON version)")
+    parser = argparse.ArgumentParser(description="Meta-Statistical Entropy Estimator Training")
     parser.add_argument("--config", type=str, required=True, help="Path to JSON config file")
     args = parser.parse_args()
 
@@ -71,6 +71,11 @@ def main():
     with open(args.config, "r") as f:
         cfg = json.load(f)
     print(f"Loaded training configuration from {args.config}")
+
+    # Save configuration
+    config_path = os.path.join(base_dir, f"{name}_config.json")
+    with open(config_path, "w") as f:
+        json.dump(cfg, f, indent=4, default=str)
 
     # Extract parameters from JSON
     name = cfg["name"]
@@ -122,7 +127,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     loss_fn = nn.MSELoss()
 
-    base_dir = os.path.join("experiments", name)
+    base_dir = os.path.join("training", name)
     os.makedirs(base_dir, exist_ok=True)
     model_path = os.path.join(base_dir, f"{name}_model.pt")
 
@@ -149,13 +154,9 @@ def main():
 
         print(log_msg, flush=True)
 
-    # ---- Save model, configuration and results ----
+    # ---- Save model and results ----
     if val_path is None:
         torch.save(model.state_dict(), model_path)
-
-    config_path = os.path.join(base_dir, f"{name}_config.json")
-    with open(config_path, "w") as f:
-        json.dump(cfg, f, indent=4, default=str)
 
     results_path = os.path.join(base_dir, f"{name}_results.json")
     with open(results_path, "w") as f:
