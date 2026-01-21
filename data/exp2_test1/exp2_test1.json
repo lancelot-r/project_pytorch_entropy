@@ -1,0 +1,16 @@
+{
+    "size": 2000,
+    "name": "exp2_test1",
+    "distribution": [
+        "normal",
+        "exponential",
+        "uniform",
+        "gamma",
+        "laplace"
+    ],
+    "n": [
+        10,
+        1000
+    ],
+    "seed": 3
+}

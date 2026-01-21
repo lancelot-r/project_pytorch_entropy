@@ -1,0 +1,16 @@
+{
+    "size": 80000,
+    "name": "exp2_train",
+    "distribution": [
+        "normal",
+        "exponential",
+        "uniform",
+        "gamma",
+        "laplace"
+    ],
+    "n": [
+        30,
+        300
+    ],
+    "seed": 1
+}

@@ -1,8 +1,8 @@
 {
-  "name": "exp1",
-  "data": "exp1_train",
-  "val_data": "exp1_val",
-  "epochs": 10,
+  "name": "exp2",
+  "data": "exp2_train",
+  "val_data": "exp2_val",
+  "epochs": 20,
   "batch_size": 8,
   "hidden": 64,
   "heads": 4,
