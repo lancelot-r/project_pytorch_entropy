@@ -35,7 +35,7 @@ AVAILABLE_DISTS = [
 ]
 
 
-def sample_dataset(allowed_dists: List[str], n=None) -> Tuple[np.ndarray, float, str]:
+def sample_dataset(allowed_dists: List[str], n=None, dim:int=1) -> Tuple[np.ndarray, float, str]:
     """Generate one dataset X and its analytical entropy label from one of the allowed distributions."""
     distribution = np.random.choice(allowed_dists)
 
@@ -53,53 +53,63 @@ def sample_dataset(allowed_dists: List[str], n=None) -> Tuple[np.ndarray, float,
 
     # generate dataset and entropy
     if distribution == "normal":
-        mu = np.random.uniform(-5, 5)
-        sigma = np.random.uniform(0.5, 3)
-        X = np.random.normal(mu, sigma, size=n)
-        y = 0.5 * np.log(2 * np.pi * np.e * sigma**2)
+        if dim == 1:    
+            mu = np.random.uniform(-5, 5)
+            sigma = np.random.uniform(0.5, 3)
+            X = np.random.normal(mu, sigma, size=n)
+            y = dim * 0.5 * np.log(2 * np.pi * np.e * sigma**2)
+        else:
+            mu = np.random.uniform(-5, 5, size=dim)     # Mean vector
+            A = np.random.randn(dim, dim)   # Random positive-definite covariance matrix
+            # Sigma = A @ A.T     # guarantees positive-definite
+            variances = np.random.uniform(0.5, 3, size=dim)
+            Sigma = np.diag(variances)
+            X = np.random.multivariate_normal(mu, Sigma, size=n)    # Sample n vectors in R^dim
+            y = 0.5 * np.log((2 * np.pi * np.e)**dim * np.linalg.det(Sigma))     # Differential entropy of multivariate normal
+
 
     elif distribution == "uniform":
         a = np.random.uniform(-5, 0)
         b = np.random.uniform(0, 5)
         if b <= a:
             b = a + 1.0
-        X = np.random.uniform(a, b, size=n)
-        y = np.log(b - a)
+        X = np.random.uniform(a, b, size=(n,dim))
+        y = dim * np.log(b - a)
 
     elif distribution == "exponential":
         lam = np.random.uniform(0.2, 3)
-        X = np.random.exponential(1 / lam, size=n)
-        y = 1 - np.log(lam)
+        X = np.random.exponential(1 / lam, size=(n,dim))
+        y = dim * (1 - np.log(lam))
 
     elif distribution == "gamma":
         k = np.random.uniform(0.5, 5)
         theta = np.random.uniform(0.5, 3)
-        X = np.random.gamma(k, theta, size=n)
-        y = k + np.log(theta) + np.log(gamma_func(k)) + (1 - k) * digamma(k)
+        X = np.random.gamma(k, theta, size=(n,dim))
+        y = dim * (k + np.log(theta) + np.log(gamma_func(k)) + (1 - k) * digamma(k))
 
     elif distribution == "lognormal":
         mu = np.random.uniform(-1, 1)
         sigma = np.random.uniform(0.2, 1.0)
-        X = np.random.lognormal(mu, sigma, size=n)
-        y = 0.5 + mu + np.log(sigma * np.sqrt(2 * np.pi))
+        X = np.random.lognormal(mu, sigma, size=(n,dim))
+        y = dim * (0.5 + mu + np.log(sigma * np.sqrt(2 * np.pi)))
 
     elif distribution == "laplace":
         mu = np.random.uniform(-3, 3)
         b = np.random.uniform(0.2, 2.0)
-        X = np.random.laplace(mu, b, size=n)
-        y = 1 + np.log(2 * b)
+        X = np.random.laplace(mu, b, size=(n,dim))
+        y = dim * (1 + np.log(2 * b))
 
     elif distribution == "logistic":
         mu = np.random.uniform(-3, 3)
         s = np.random.uniform(0.2, 2.0)
-        X = np.random.logistic(mu, s, size=n)
-        y = 2 + np.log(s)
+        X = np.random.logistic(mu, s, size=(n,dim))
+        y = dim * (2 + np.log(s))
 
     elif distribution == "beta":
         alpha = np.random.uniform(0.5, 5)
         beta_ = np.random.uniform(0.5, 5)
-        X = np.random.beta(alpha, beta_, size=n)
-        y = (
+        X = np.random.beta(alpha, beta_, size=(n,dim))
+        y = dim * (
             np.log(gamma_func(alpha) * gamma_func(beta_) / gamma_func(alpha + beta_))
             - (alpha - 1) * digamma(alpha)
             - (beta_ - 1) * digamma(beta_)
@@ -108,8 +118,8 @@ def sample_dataset(allowed_dists: List[str], n=None) -> Tuple[np.ndarray, float,
 
     elif distribution == "chi_square":
         k = np.random.uniform(1, 10)
-        X = np.random.chisquare(k, size=n)
-        y = (
+        X = np.random.chisquare(k, size=(n,dim))
+        y = dim * (
             0.5 * k + np.log(2 * gamma_func(k / 2)) + (1 - k / 2) * digamma(k / 2)
         )
 
@@ -117,18 +127,18 @@ def sample_dataset(allowed_dists: List[str], n=None) -> Tuple[np.ndarray, float,
         x0 = np.random.uniform(-3, 3)
         gamma_ = np.random.uniform(0.2, 3)
         X = x0 + gamma_ * np.tan(np.pi * (np.random.rand(n) - 0.5))
-        y = np.log(4 * np.pi * gamma_)
+        y = dim * np.log(4 * np.pi * gamma_)
 
     elif distribution == "rayleigh":
         sigma = np.random.uniform(0.2, 3)
-        X = np.random.rayleigh(sigma, size=n)
-        y = 1 + np.log(sigma / np.sqrt(2))
+        X = np.random.rayleigh(sigma, size=(n,dim))
+        y = dim * (1 + np.log(sigma / np.sqrt(2)))
 
     elif distribution == "weibull":
         k = np.random.uniform(0.5, 5)
         lam = np.random.uniform(0.5, 3)
-        X = lam * np.random.weibull(k, size=n)
-        y = (
+        X = lam * np.random.weibull(k, size=(n,dim))
+        y = dim * (
             gamma_func(1 + 1/k)
             - (1 - 1/k) * digamma(1)
             + np.log(lam / k)
@@ -141,21 +151,21 @@ def sample_dataset(allowed_dists: List[str], n=None) -> Tuple[np.ndarray, float,
         xm = np.random.uniform(0.5, 3)
         alpha = np.random.uniform(1.1, 5)
         X = xm * (1 - np.random.rand(n)) ** (-1 / alpha)
-        y = np.log(xm / alpha) + 1 + 1 / alpha
+        y = dim * (np.log(xm / alpha) + 1 + 1 / alpha)
 
     elif distribution == "inverse_gamma":
         alpha = np.random.uniform(1, 5)
         beta = np.random.uniform(0.5, 3)
-        X = 1 / np.random.gamma(alpha, 1 / beta, size=n)
-        y = (
+        X = 1 / np.random.gamma(alpha, 1 / beta, size=(n,dim))
+        y = dim * (
             alpha + np.log(beta * gamma_func(alpha))
             - (1 + alpha) * digamma(alpha)
         )
 
     elif distribution == "student_t":
         nu = np.random.uniform(1.5, 20)
-        X = np.random.standard_t(nu, size=n).astype(np.float32)
-        y = (
+        X = np.random.standard_t(nu, size=(n,dim)).astype(np.float32)
+        y = dim * (
             np.log(np.sqrt(nu) * gamma_func((nu) / 2) / gamma_func((nu + 1) / 2))
             + (nu + 1)/2 * (digamma((nu + 1)/2) - digamma(nu/2))
         )
@@ -167,11 +177,11 @@ def sample_dataset(allowed_dists: List[str], n=None) -> Tuple[np.ndarray, float,
     return X.astype(np.float32), np.float32(y), distribution
 
 
-def generate_meta_dataset(n_samples: int, allowed_dists: List[str], n=None):
+def generate_meta_dataset(n_samples: int, allowed_dists: List[str], n=None, dim=1):
     """Generate a full meta-dataset of (dataset, entropy, distribution) triples."""
     datasets, targets, dists = [], [], []
     for _ in range(n_samples):
-        X, y, dist = sample_dataset(allowed_dists, n)
+        X, y, dist = sample_dataset(allowed_dists, n, dim=dim)
         datasets.append(X)
         targets.append(y)
         dists.append(dist)
@@ -209,6 +219,7 @@ def main():
     name = cfg.get("name", "metadata.npz")
     distribution = cfg.get("distribution", AVAILABLE_DISTS)
     n = cfg.get("n")
+    dim = cfg.get("dim", 1)
     seed = cfg.get("seed")
 
     if seed is not None:
@@ -225,7 +236,7 @@ def main():
     base_dir = os.path.join("data", name)
     os.makedirs(base_dir, exist_ok=True)
 
-    train_datasets, train_targets, train_dists = generate_meta_dataset(size, distribution, n=n_value)
+    train_datasets, train_targets, train_dists = generate_meta_dataset(size, distribution, n=n_value,dim=dim)
     train_path = os.path.join(base_dir, f"{name}.npz")
     save_meta_dataset(train_datasets, train_targets, train_dists, train_path)
 

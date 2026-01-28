@@ -1,0 +1,13 @@
+{
+    "size": 80000,
+    "name": "dim2_train",
+    "distribution": [
+        "normal"
+    ],
+    "n": [
+        10,
+        150
+    ],
+    "dim": 2,
+    "seed": 1
+}

@@ -3,5 +3,6 @@
   "name": "exp2_test1",
   "distribution": ["normal", "exponential", "uniform", "gamma", "laplace"],
   "n": [10, 1000],
+  "dim": 2,
   "seed": 3
 }

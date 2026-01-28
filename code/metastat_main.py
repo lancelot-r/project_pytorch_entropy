@@ -72,10 +72,6 @@ def main():
         cfg = json.load(f)
     print(f"Loaded training configuration from {args.config}")
 
-    # Save configuration
-    config_path = os.path.join(base_dir, f"{name}_config.json")
-    with open(config_path, "w") as f:
-        json.dump(cfg, f, indent=4, default=str)
 
     # Extract parameters from JSON
     name = cfg["name"]
@@ -130,6 +126,11 @@ def main():
     base_dir = os.path.join("training", name)
     os.makedirs(base_dir, exist_ok=True)
     model_path = os.path.join(base_dir, f"{name}_model.pt")
+
+    # Save configuration
+    config_path = os.path.join(base_dir, f"{name}_config.json")
+    with open(config_path, "w") as f:
+        json.dump(cfg, f, indent=4, default=str)
 
     best_val = float("inf")
     results = []
