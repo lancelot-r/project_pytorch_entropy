@@ -1,8 +1,0 @@
-{
-  "size": 2000,
-  "name": "dim2_test",
-  "distribution": ["normal"],
-  "n": [10, 300],
-  "dim": 2,
-  "seed": 3
-}

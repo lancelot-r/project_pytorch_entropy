@@ -1,8 +1,0 @@
-{
-    "name": "exp2_test",
-    "data": "exp2_test1",
-    "model": "exp2",
-    "batch_size": 8,
-    "device": "mps",
-    "bootstrap": 30
-}

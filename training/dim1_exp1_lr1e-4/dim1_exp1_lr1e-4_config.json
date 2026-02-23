@@ -1,0 +1,13 @@
+{
+    "name": "dim1_exp1_lr1e-4",
+    "data": "dim1_exp1_train",
+    "val_data": "dim1_exp1_val",
+    "epochs": 25,
+    "batch_size": 128,
+    "hidden": 16,
+    "heads": 4,
+    "layers": 2,
+    "lr": 0.0001,
+    "weight_decay": 0,
+    "device": "mps"
+}

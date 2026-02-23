@@ -1,10 +1,10 @@
 {
     "dir": "MetaStat",
-    "name": "dim10_2lay_lr1e2_eval_3k",
+    "name": "dim10_2lay_lr5e2_eval_3k",
     "data": "dim10_exp1_test",
-    "model": "dim10_2lay_lr1e-2",
+    "model": "dim10_2lay_lr5e-2",
     "batch_size": 8,
-    "knn_k": 3,
+    "knn_k": 5,
     "device": "cuda",
     "bootstrap": 30
 }

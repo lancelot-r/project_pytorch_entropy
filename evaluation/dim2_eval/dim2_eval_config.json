@@ -1,9 +1,0 @@
-{
-    "name": "dim2_eval",
-    "data": "dim2_test",
-    "model": "dim2",
-    "batch_size": 8,
-    "knn_k": 3,
-    "device": "mps",
-    "bootstrap": 30
-}

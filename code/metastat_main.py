@@ -20,30 +20,36 @@ import os
 import json
 from tqdm import tqdm
 
-def train_epoch(model, loader, optimizer, loss_fn, device, accum_steps=4):
+def train_epoch(model, loader, optimizer, loss_fn, device, accum_steps=1):
     model.train()
     total_loss = 0.0
-    optimizer.zero_grad()
+    optimizer.zero_grad(set_to_none=True)
 
     for step, (x, lengths, y) in enumerate(loader):
         x, lengths, y = x.to(device), lengths.to(device), y.to(device)
 
         pred = model(x, lengths)
+
         loss = loss_fn(pred, y) / accum_steps
+
         loss.backward()
 
         if (step + 1) % accum_steps == 0:
+            # ✅ ALWAYS clip before stepping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
 
-        total_loss += loss.item() * accum_steps  # undo scaling for logging
+        total_loss += loss.item() * accum_steps
 
     # Handle leftover gradients
     if (step + 1) % accum_steps != 0:
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
 
     return total_loss / len(loader)
+
 
 
 @torch.inference_mode()
@@ -61,6 +67,12 @@ def eval_epoch(model, loader, loss_fn, device):
 
 
 def main():
+    torch.set_default_dtype(torch.float32)
+
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+
+
     parser = argparse.ArgumentParser(description="Meta-Statistical Entropy Estimator Training")
     parser.add_argument("--config", type=str, required=True, help="Path to JSON config file")
     args = parser.parse_args()
@@ -74,12 +86,19 @@ def main():
 
 
     # Extract parameters from JSON
+    base_dir_cfg = cfg.get("dir")
+
+    def with_base_dir(*paths):
+        if base_dir_cfg is None:
+            return os.path.join(*paths)
+        return os.path.join(base_dir_cfg, *paths)
+    
     name = cfg["name"]
     data_name = cfg["data"]
-    data_path = os.path.join("data", data_name, f"{data_name}.npz")
+    data_path = with_base_dir("data", data_name, f"{data_name}.npz")
     val_name = cfg.get("val_data")
     if val_name is not None:
-        val_path = os.path.join("data", val_name, f"{val_name}.npz")
+        val_path = with_base_dir("data", val_name, f"{val_name}.npz")
     else:
         val_path = None
     epochs = cfg["epochs"]
@@ -123,7 +142,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     loss_fn = nn.MSELoss()
 
-    base_dir = os.path.join("training", name)
+    base_dir = with_base_dir("training", name)
     os.makedirs(base_dir, exist_ok=True)
     model_path = os.path.join(base_dir, f"{name}_model.pt")
 

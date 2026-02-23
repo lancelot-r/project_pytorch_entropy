@@ -178,11 +178,19 @@ def main():
     print(f"Loaded configuration from {args.config}")
 
     # --- Extract parameters ---
+    base_dir_cfg = cfg.get("dir")
+
+    def with_base_dir(*paths):
+        if base_dir_cfg is None:
+            return os.path.join(*paths)
+        return os.path.join(base_dir_cfg, *paths)
+    
     name = cfg["name"]
     data_name = cfg["data"]
-    data_path = os.path.join("data", data_name, f"{data_name}.npz")
+    data_path = with_base_dir("data", data_name, f"{data_name}.npz")
+
     model_name = cfg["model"]
-    model_path = os.path.join("training", model_name, f"{model_name}_model.pt")
+    model_path = with_base_dir("training", model_name, f"{model_name}_model.pt")
     batch_size = cfg["batch_size"]
     KNN_K = cfg.get("knn_k", 3)
     device = torch.device(cfg["device"])
@@ -204,7 +212,7 @@ def main():
     dim = first_sample.shape[1] if first_sample.ndim == 2 else 1
 
 
-    model_config = os.path.join("training", model_name, f"{model_name}_config.json")
+    model_config = with_base_dir("training", model_name, f"{model_name}_config.json")
     with open(model_config, "r") as f:
         model_cfg = json.load(f)
     model = MyTransformerEstimator(
@@ -261,7 +269,7 @@ def main():
         assert len(model_mean) == len(model_preds)
 
 
-    base_dir = os.path.join("evaluation", name)
+    base_dir = with_base_dir("evaluation", name)
     os.makedirs(base_dir, exist_ok=True)
     save_path = os.path.join(base_dir, f"{name}.csv")
     df.to_csv(save_path, index=False)

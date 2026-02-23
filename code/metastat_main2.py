@@ -20,7 +20,7 @@ import os
 import json
 from tqdm import tqdm
 
-def train_epoch(model, loader, optimizer, loss_fn, device, accum_steps=4):
+def train_epoch(model, loader, optimizer, loss_fn, device, accum_steps=1):
     model.train()
     total_loss = 0.0
     optimizer.zero_grad()
@@ -73,12 +73,19 @@ def main():
     print(f"Loaded training configuration from {args.config}")
 
     # Extract parameters from JSON
+    base_dir_cfg = cfg.get("dir")
+
+    def with_base_dir(*paths):
+        if base_dir_cfg is None:
+            return os.path.join(*paths)
+        return os.path.join(base_dir_cfg, *paths)
+    
     name = cfg["name"]
     data_name = cfg["data"]
-    data_path = os.path.join("data", data_name, f"{data_name}.npz")
+    data_path = with_base_dir("data", data_name, f"{data_name}.npz")
     val_name = cfg.get("val_data")
     if val_name is not None:
-        val_path = os.path.join("data", val_name, f"{val_name}.npz")
+        val_path = with_base_dir("data", val_name, f"{val_name}.npz")
     else:
         val_path = None
     epochs = cfg["epochs"]
@@ -126,9 +133,10 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     loss_fn = nn.MSELoss()
 
-    base_dir = os.path.join("training", name)
+    base_dir = with_base_dir("training", name)
     os.makedirs(base_dir, exist_ok=True)
     model_path = os.path.join(base_dir, f"{name}_model.pt")
+
 
 
     # Save configuration
@@ -139,25 +147,51 @@ def main():
     best_val = float("inf")
     results = []
 
+    patience = cfg.get("early_stopping_patience", 8)
+    min_delta = cfg.get("early_stopping_min_delta", 1e-4)
+
+    best_val = float("inf")
+    epochs_no_improve = 0
+
+
     # ---- Training ----
-    for epoch in range(1, epochs+1):
+    for epoch in range(1, epochs + 1):
         train_loss = train_epoch(model, train_loader, optimizer, loss_fn, device)
         log_msg = f"Epoch {epoch:03d} | train loss {train_loss:.6f}"
 
         if val_path is not None:
             val_loss = eval_epoch(model, val_loader, loss_fn, device)
-            
-            if val_loss < best_val:
+
+            if val_loss < best_val - min_delta:
                 best_val = val_loss
+                epochs_no_improve = 0
                 torch.save(model.state_dict(), model_path)
+            else:
+                epochs_no_improve += 1
+
             log_msg += f" | val loss {val_loss:.6f}"
+            log_msg += f" | no_improve {epochs_no_improve}/{patience}"
 
-            results.append({"train_loss": train_loss, "val_loss": val_loss})
+            results.append({
+                "epoch": epoch,
+                "train_loss": train_loss,
+                "val_loss": val_loss
+            })
 
+            if epochs_no_improve >= patience:
+                print(
+                    f"🛑 Early stopping at epoch {epoch} "
+                    f"(best val loss {best_val:.6f})"
+                )
+                break
         else:
-            results.append({"train_loss": train_loss})
+            results.append({
+                "epoch": epoch,
+                "train_loss": train_loss
+            })
 
         print(log_msg, flush=True)
+
 
     # ---- Save model and results ----
     if val_path is None:

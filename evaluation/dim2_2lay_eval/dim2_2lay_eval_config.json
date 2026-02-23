@@ -1,8 +1,8 @@
 {
     "dir": "MetaStat",
-    "name": "dim10_2lay_lr1e2_eval_3k",
-    "data": "dim10_exp1_test",
-    "model": "dim10_2lay_lr1e-2",
+    "name": "dim2_2lay_eval",
+    "data": "dim2_exp1_test",
+    "model": "dim2_2lay_lr5e-3",
     "batch_size": 8,
     "knn_k": 3,
     "device": "cuda",

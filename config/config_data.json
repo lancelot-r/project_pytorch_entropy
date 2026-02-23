@@ -1,8 +1,13 @@
 {
-  "size": 2000,
-  "name": "exp2_test1",
-  "distribution": ["normal", "exponential", "uniform", "gamma", "laplace"],
-  "n": [10, 1000],
-  "dim": 2,
-  "seed": 3
+    "size": 10000,
+    "name": "dim2_data",
+    "distribution": [
+        "normal",
+        "uniform",
+        "student_t",
+        "dirichlet"
+    ],
+    "n": [10, 300],
+    "dim": 2,
+    "seed": 1
 }
