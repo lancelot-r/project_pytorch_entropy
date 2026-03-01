@@ -158,10 +158,6 @@ Modules used:
 
 ## Multivariate Evaluation
 
-```bash
-python src/multi_evaluation.py --config config/config_eval.json
-```
-
 Additional parameter:
 
 | Parameter | Type | Description |
