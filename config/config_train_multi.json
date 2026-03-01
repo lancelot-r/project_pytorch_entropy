@@ -1,0 +1,14 @@
+{
+  "dir": "MetaStat",
+  "name": "dim10_2lay_lr1e-2_v2",
+  "data": "dim10_exp1_train",
+  "val_data": "dim10_exp1_val",
+  "epochs": 100,
+  "batch_size": 128,
+  "hidden": 16,
+  "heads": 4,
+  "layers": 2,
+  "lr": 1e-2,
+  "weight_decay": 0,
+  "device": "cuda"
+}

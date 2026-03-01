@@ -1,11 +1,6 @@
 {
-    "train_size": 20000,
-    "test_size": 5000,
-    "val_size": 3000,
-    "outdir": "data",
-    "train_name": "train_meta.npz",
-    "val_name": "val_meta.npz",
-    "test_name": "test_meta.npz",
+    "size": 10000,
+    "name": "dim1_data",
     "distribution": [
         "normal",
         "uniform",
@@ -23,9 +18,7 @@
         "inverse_gamma",
         "student_t"
     ],
-    "n": [
-        50,
-        200
-    ],
-    "seed": 42
+    "n": [10, 300],
+    "dim": 1,
+    "seed": 1
 }

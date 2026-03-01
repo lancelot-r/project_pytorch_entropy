@@ -1,0 +1,13 @@
+{
+    "size": 10000,
+    "name": "dim2_data",
+    "distribution": [
+        "normal",
+        "uniform",
+        "student_t",
+        "dirichlet"
+    ],
+    "n": [10, 300],
+    "dim": 2,
+    "seed": 1
+}

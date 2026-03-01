@@ -1,29 +1,41 @@
-PYTHON = python
-CONFIG = config.json
-DATA_GENERATION = metadata.py
-DATA_LOAD = metastat_dataloader.py
-MAIN = metastat_main.py
-MODEL = metastat_model.py
-MODEL_CONFIG = model_params.json
-MODEL_TEST = test_script.py
-.PHONY: clean
+PYTHON=python
 
-data_generation:
-	$(PYTHON) $(DATA_GENERATION) --config $(CONFIG)
+DATA_CONFIG=config/config_data.json
+TRAIN_CONFIG=config/config_train.json
+EVAL_CONFIG=config/config_eval.json
 
-model:
-	$(PYTHON) $(MODEL)
+DATA_CONFIG_MULTI=config/config_data_multi.json
+TRAIN_CONFIG_MULTI=config/config_train_multi.json
+EVAL_CONFIG_MULTI=config/config_eval_multi.json
+
+.PHONY: all clean univariate multivariate \
+        data train eval \
+        data_multi train_multi eval_multi
+
+all: univariate
+
+univariate: data train eval
+
+multivariate: data_multi train_multi eval_multi
+
+data:
+	$(PYTHON) code/metadata.py --config $(DATA_CONFIG)
 
 train:
-	$(PYTHON) $(MAIN) --config $(MODEL_CONFIG)
+	$(PYTHON) code/metastat_main.py --config $(TRAIN_CONFIG)
 
-test:
-	$(PYTHON) $(MODEL_TEST)
+eval:
+	$(PYTHON) code/evaluation.py --config $(EVAL_CONFIG)
 
+data_multi:
+	$(PYTHON) code/multi_metadata.py --config $(DATA_CONFIG_MULTI)
 
+train_multi:
+	$(PYTHON) code/multi_metastat_main.py --config $(TRAIN_CONFIG_MULTI)
 
-clean_folders:
-	@echo "Cleaning data, models, and results folders..."
-	@mkdir -p data models results
-	@rm -rf data/* models/* results/*
-	@echo "Done."
+eval_multi:
+	$(PYTHON) code/multi_evaluation.py --config $(EVAL_CONFIG_MULTI)
+
+clean:
+	rm -rf training/*
+	rm -rf evaluation/*

@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+"""
+Usage example
+-------------
+export PYTORCH_ENABLE_MPS_FALLBACK=1
+
+python code/metadata.py \           
+    --config config/config_data.json
+"""
+
 import json
 import numpy as np
 from typing import Tuple, List
@@ -180,24 +190,6 @@ def save_meta_dataset(datasets, targets, dists, save_path: str):
         targets=np.array(targets, dtype=np.float32),
         dists=np.array(dists, dtype=object),
     )
-    print(f"Saved meta-dataset to {save_path} ({len(datasets)} samples)")
-
-
-def check_nan(datasets, targets):
-    has_nan_data = any(np.isnan(x).any() or np.isinf(x).any() for x in datasets)
-    has_nan_targets = np.isnan(targets).any() or np.isinf(targets).any()
-    print("NaN or Inf in datasets:", has_nan_data)
-    print("NaN or Inf in targets:", has_nan_targets)
-
-def summarize_dataset(datasets, targets, dists):
-    print("\n Summary statistics:")
-    print(f"Entropy mean: {np.mean(targets):.4f}, std: {np.std(targets):.4f}")
-    unique, counts = np.unique(dists, return_counts=True)
-    print("Distribution breakdown:")
-    for u, c in zip(unique, counts):
-        print(f"  - {u:<12}: {c} samples")
-    print()
-    check_nan(datasets, targets)
 
 
 def main():
@@ -213,13 +205,8 @@ def main():
     print(f"Loaded configuration from {args.config}")
 
     # --- Extract parameters ---
-    train_size = cfg.get("train_size")
-    val_size = cfg.get("val_size")
-    test_size = cfg.get("test_size")
-    test_name = cfg.get("test_name", "test_meta.npz")
-    outdir = cfg.get("outdir", "data")
-    train_name = cfg.get("train_name", "train_meta.npz")
-    val_name = cfg.get("val_name", "val_meta.npz")
+    size = cfg.get("size")
+    name = cfg.get("name", "metadata.npz")
     distribution = cfg.get("distribution", AVAILABLE_DISTS)
     n = cfg.get("n")
     seed = cfg.get("seed")
@@ -235,34 +222,20 @@ def main():
     else:
         n_value = None
 
-    os.makedirs(outdir, exist_ok=True)
+    base_dir = os.path.join("data", name)
+    os.makedirs(base_dir, exist_ok=True)
 
-    print(f"Generating training data ({train_size} samples) using distributions: {distribution}")
-    train_datasets, train_targets, train_dists = generate_meta_dataset(train_size, distribution, n=n_value)
-    train_path = os.path.join(outdir, train_name)
+    train_datasets, train_targets, train_dists = generate_meta_dataset(size, distribution, n=n_value)
+    train_path = os.path.join(base_dir, f"{name}.npz")
     save_meta_dataset(train_datasets, train_targets, train_dists, train_path)
-    summarize_dataset(train_datasets, train_targets, train_dists)
 
-    if val_size:
-        print(f"Generating validation data ({val_size} samples) using distributions: {distribution}")
-        val_datasets, val_targets, val_dists = generate_meta_dataset(val_size, distribution, n=n_value)
-        val_path = os.path.join(outdir, val_name)
-        save_meta_dataset(val_datasets, val_targets, val_dists, val_path)
-        summarize_dataset(train_datasets, train_targets, train_dists)
-        
-    if test_size:
-        print(f"Generating test data ({test_size} samples) using distributions: {distribution}")
-        test_datasets, test_targets, test_dists = generate_meta_dataset(test_size, distribution, n=n_value)
-        test_path = os.path.join(outdir, test_name)
-        save_meta_dataset(test_datasets, test_targets, test_dists, test_path)
-        summarize_dataset(train_datasets, train_targets, train_dists)
 
     # Save the used configuration
-    used_cfg_path = os.path.join(outdir, "used_config.json")
+    used_cfg_path = os.path.join(base_dir, f"{name}.json")
     with open(used_cfg_path, "w") as f:
         json.dump(cfg, f, indent=4)
-    print(f"Saved configuration to {used_cfg_path}")
-    print(f"Files saved in: {os.path.abspath(outdir)}")
+
+    print(f"Files saved in: {base_dir}")
 
 if __name__ == "__main__":
     main()

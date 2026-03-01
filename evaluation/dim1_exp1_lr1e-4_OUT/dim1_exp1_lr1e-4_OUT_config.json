@@ -1,0 +1,8 @@
+{
+    "name": "dim1_exp1_lr1e-4_OUT",
+    "data": "dim1_exp1_testOUT",
+    "model": "dim1_exp1_lr1e-4",
+    "batch_size": 8,
+    "device": "mps",
+    "bootstrap": 30
+}
