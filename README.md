@@ -48,12 +48,6 @@ Available distributions:
  "rayleigh", "weibull", "pareto", "inverse_gamma", "student_t"]
 ```
 
-To generate a meta-dataset:
-
-```bash
-python src/metadata.py --config config/config_data.json
-```
-
 The generation process creates a folder containing:
 
 - The configuration used  
@@ -93,12 +87,6 @@ The file `config/config_train.json` allows you to specify the training parameter
 | `weight_decay` | float | L2 regularization |
 | `device` | str | Device (`cpu`, `cuda`, `mps`, etc.) |
 
-To launch training:
-
-```bash
-python src/metastat_main.py --config config/config_train.json
-```
-
 At the end of training, a folder is created in `training/` containing:
 
 - The configuration used  
@@ -130,12 +118,6 @@ The file `config/config_eval.json` allows you to specify evaluation parameters.
 | `device` | str | Device (`cpu`, `cuda`, `mps`, etc.) |
 | `bootstrap` | int | Number of bootstrap resamples |
 
-To run evaluation:
-
-```bash
-python src/evaluation.py --config config/config_eval.json
-```
-
 A folder is created in `evaluation/` containing:
 
 - The evaluation configuration  
@@ -166,10 +148,6 @@ Available distributions:
 ---
 
 ## Multivariate Training
-
-```bash
-python src/metastat_main.py --config config/config_train.json
-```
 
 Modules used:
 
